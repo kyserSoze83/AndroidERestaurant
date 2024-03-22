@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<font-family xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:fontProviderAuthority="@string/font_provider_authority"
+    app:fontProviderPackage="@string/font_provider_package"
+    app:fontProviderQuery="@string/font_provider_query"
+    app:fontProviderCerts="@array/com_google_android_gms_fonts_certs"
+    app:fontProviderFetchStrategy="@string/font_provider_fetch_strategy"
+    app:fontProviderFetchTimeout="@integer/font_provider_fetch_timeout">
+    <font
+        android:font="@font/magic_sparkle"
+        android:fontWeight="400"
+        android:fontStyle="normal"
+        app:font="@font/magic_spark"
+        app:fontWeight="400"
+        app:fontStyle="normal" />
+</font-family>
