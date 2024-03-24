@@ -82,12 +82,17 @@ class DishDetailActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    DisplayDish(dish, this, this::navigateToActivity, this::calculatePrice, this::onAddToCartClicked, this::logJsonFileContent, this::clearJsonFile)
+                    DisplayDish(dish, this, this::navigateToActivity2, this::calculatePrice, this::onAddToCartClicked, this::logJsonFileContent, this::clearJsonFile,{ onBackPressedDispatcher.onBackPressed() })
                 }
             }
         }
     }
-    private fun navigateToActivity(activityClass: Class<*>) {
+    private fun navigateToActivity(activityClass: Class<*>,param: String) {
+        val intent = Intent(this, activityClass)
+        intent.putExtra("DISH_TYPE", param)
+        startActivity(intent)
+    }
+    private fun navigateToActivity2(activityClass: Class<*>) {
         val intent = Intent(this, activityClass)
         startActivity(intent)
     }
@@ -144,7 +149,7 @@ class DishDetailActivity : ComponentActivity() {
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun DisplayDish(dish:Dish,context:Context, navigateToActivity: (Class<*>) -> Unit, calculatePrice:(Float, Int) -> Float, onAddToCartClicked:(Int, String, Int, Float, String) -> Unit, logJsonFileContent:(Context, String) -> Unit, clearJsonFile:(String) -> Unit, modifier: Modifier = Modifier) {
+fun DisplayDish(dish:Dish,context:Context, navigateToActivity2: (Class<*>) -> Unit, calculatePrice:(Float, Int) -> Float, onAddToCartClicked:(Int, String, Int, Float, String) -> Unit, logJsonFileContent:(Context, String) -> Unit, clearJsonFile:(String) -> Unit, onBackPressed:() -> Unit,modifier: Modifier = Modifier) {
     val iconMinus: ImageVector = Icons.Default.Delete
     val iconPlus: ImageVector = Icons.Default.Add
     var totalPrice by remember { mutableFloatStateOf(0f) }
@@ -164,6 +169,10 @@ fun DisplayDish(dish:Dish,context:Context, navigateToActivity: (Class<*>) -> Uni
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            CustomActionBar(
+                onLeftButtonClick = { onBackPressed() },
+                onRightButtonClick = { navigateToActivity2(CartActivity::class.java) }
+            )
             ImageCarousel(dish.images, context)
             Spacer(modifier.height(20.dp))
             Text(

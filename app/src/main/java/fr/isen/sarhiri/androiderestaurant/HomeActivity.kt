@@ -1,11 +1,15 @@
 package fr.isen.sarhiri.androiderestaurant
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.ImageView
 import android.widget.Toast
+import android.widget.Toolbar
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -15,6 +19,7 @@ import androidx.compose.ui.Modifier
 import fr.isen.sarhiri.androiderestaurant.ui.theme.AndroidERestaurantTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,14 +30,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import fr.isen.sarhiri.androiderestaurant.ui.theme.Orange
@@ -45,16 +58,20 @@ class HomeActivity : ComponentActivity() {
             AndroidERestaurantTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    Greeting(Message("Bienvenue\nchez","DroidRestaurant"),this::showToast, this::navigateToActivity)
-
+                    Greeting(Message("Bienvenue\nchez","DroidRestaurant"),this::showToast, this::navigateToActivity, this::navigateToActivity2)
                 }
             }
         }
     }
+
     private fun showToast(message: String){
         val duration = Toast.LENGTH_LONG
         val toast = Toast.makeText(this,message,duration)
         toast.show()
+    }
+    private fun navigateToActivity2(activityClass: Class<*>) {
+        val intent = Intent(this, activityClass)
+        startActivity(intent)
     }
     private fun navigateToActivity(activityClass: Class<*>,param: String) {
         val intent = Intent(this, activityClass)
@@ -69,10 +86,12 @@ class HomeActivity : ComponentActivity() {
 
 data class Message (val greet: String, val name: String)
 @Composable
-fun Greeting(msg: Message, showToast: (String)->Unit, navigateToActivity: (Class<*>,String) -> Unit, modifier: Modifier = Modifier) {
+fun Greeting(msg: Message, showToast: (String)->Unit, navigateToActivity: (Class<*>,String) -> Unit, navigateToActivity2:(Class<*>) -> Unit, modifier: Modifier = Modifier) {
     Column(
-        modifier=modifier.padding(top = 30.dp)
     ) {
+        HomeCustomActionBar(
+            onRightButtonClick = { navigateToActivity2(CartActivity::class.java) }
+        )
         Row(
             modifier=modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center
@@ -170,6 +189,43 @@ fun ClickableButton(text: String, onClick: () -> Unit) {
             modifier=Modifier,
             fontSize = 30.sp
         )
+    }
+}
+
+@Composable
+fun HomeCustomActionBar(
+    onRightButtonClick: () -> Unit,
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier,
+) {
+    val iconCart: ImageVector = Icons.Default.ShoppingCart
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .background(color = Orange),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+
+    ) {
+        Text(
+            text = "The Pepe's Restaurant",
+            style = TextStyle(
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            ),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(1f)
+        )
+        IconButton(
+            onClick = { onRightButtonClick() }
+        ) {
+            Icon(imageVector = iconCart,
+                contentDescription = "Cart",
+                tint = Color.White
+            )
+        }
     }
 }
 

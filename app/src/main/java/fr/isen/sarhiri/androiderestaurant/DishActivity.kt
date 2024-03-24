@@ -4,8 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.ImageView
+import android.widget.Toolbar
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -45,13 +48,13 @@ import fr.isen.sarhiri.androiderestaurant.ui.theme.Orange
 import com.google.gson.Gson
 import org.json.JSONObject
 import com.android.volley.Request
-
-
+import java.io.File
 
 
 class DishActivity : ComponentActivity() {
     private val dishResponseState = mutableStateOf<DishResponse?>(null)
     private lateinit var category: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         category = intent.getStringExtra("DISH_TYPE") ?: "Pas de type provisionné"
@@ -67,7 +70,8 @@ class DishActivity : ComponentActivity() {
                         onResult={ dishResponse ->
                             dishResponseState.value=dishResponse
                         })
-                    DisplayDishes(this,this::navigateToActivity,this::navigateToActivity2, dishResponseState, category)
+                    DisplayDishes(this,this::navigateToActivity,this::navigateToActivity2,
+                        { onBackPressedDispatcher.onBackPressed() }, dishResponseState, category)
                 }
             }
         }
@@ -112,13 +116,13 @@ class DishActivity : ComponentActivity() {
 }
 
 @Composable
-fun DisplayDishes(context: Context, navigateToActivity: (Class<*>,Dish) -> Unit,navigateToActivity2: (Class<*>) -> Unit, dishResponse: State<DishResponse?>,categ:String, modifier:Modifier=Modifier) {
+fun DisplayDishes(context: Context, navigateToActivity: (Class<*>,Dish) -> Unit,navigateToActivity2: (Class<*>) -> Unit,onBackPressed:() -> Unit, dishResponse: State<DishResponse?>, categ:String,modifier:Modifier=Modifier) {
     val category = dishResponse.value?.data?.find { it.nameFr == categ }
     Column {
-        ClickableButton("Retour") {
-            //showToast("Entrée")
-            navigateToActivity2(HomeActivity::class.java)
-        }
+        CustomActionBar(
+            onLeftButtonClick = { onBackPressed() },
+            onRightButtonClick = { navigateToActivity2(CartActivity::class.java) }
+        )
         Text(
             text = categ,
             modifier = modifier
@@ -156,16 +160,16 @@ fun DisplayDishes(context: Context, navigateToActivity: (Class<*>,Dish) -> Unit,
                                 )
 
                             }
-                            Spacer(modifier.height(5.dp))
-                            Box(
-                                modifier = modifier
-                                    .height(1.dp)
-                                    .fillMaxWidth()
-                                    .border(width = 1.dp, color = Grey)
-                            )
-                            Spacer(modifier.height(20.dp))
                         }
                     }
+                    Spacer(modifier.height(5.dp))
+                    Box(
+                        modifier = modifier
+                            .height(1.dp)
+                            .fillMaxWidth()
+                            .border(width = 1.dp, color = Grey)
+                    )
+                    Spacer(modifier.height(20.dp))
                 }
             }
         }

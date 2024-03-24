@@ -18,4 +18,7 @@
     </string-array>
     <string name="title_activity_dish_detail">DishDetailActivity</string>
     <string name="title_activity_cart">CartActivity</string>
+    <string name="the_pepe_s_restaurant">The Pepe\'s Restaurant</string>
+    <string name="panier">Panier</string>
+    <string name="icone_boutton_panier">Icone boutton panier</string>
 </resources>
