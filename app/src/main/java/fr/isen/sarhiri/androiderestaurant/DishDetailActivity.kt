@@ -66,15 +66,16 @@ import java.io.IOException
 
 class DishDetailActivity : ComponentActivity() {
     private lateinit var dish: Dish
-    companion object {
-        lateinit var cartDirectory: File
-            private set
-    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        cartDirectory= File(getExternalFilesDir(null), "cartDirectory")
-        cartDirectory.mkdirs()
+
         dish = intent.getSerializableExtra("DISH") as Dish
+    }
+    override fun onResume() {
+        super.onResume()
+        val filePath = File(HomeActivity.cartDirectory, "cart.json").absolutePath
+        var count = loadCartItems(filePath).size
         setContent {
             AndroidERestaurantTheme {
                 // A surface container using the 'background' color from the theme
@@ -82,7 +83,7 @@ class DishDetailActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    DisplayDish(dish, this, this::navigateToActivity2, this::calculatePrice, this::onAddToCartClicked, this::logJsonFileContent, this::clearJsonFile,{ onBackPressedDispatcher.onBackPressed() })
+                    DisplayDish(dish, this, this::navigateToActivity2, this::calculatePrice, this::onAddToCartClicked, this::logJsonFileContent, this::clearJsonFile,{ onBackPressedDispatcher.onBackPressed() },count)
                 }
             }
         }
@@ -149,14 +150,15 @@ class DishDetailActivity : ComponentActivity() {
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun DisplayDish(dish:Dish,context:Context, navigateToActivity2: (Class<*>) -> Unit, calculatePrice:(Float, Int) -> Float, onAddToCartClicked:(Int, String, Int, Float, String) -> Unit, logJsonFileContent:(Context, String) -> Unit, clearJsonFile:(String) -> Unit, onBackPressed:() -> Unit,modifier: Modifier = Modifier) {
+fun DisplayDish(dish:Dish,context:Context, navigateToActivity2: (Class<*>) -> Unit, calculatePrice:(Float, Int) -> Float, onAddToCartClicked:(Int, String, Int, Float, String) -> Unit, logJsonFileContent:(Context, String) -> Unit, clearJsonFile:(String) -> Unit, onBackPressed:() -> Unit, counter:Int, modifier: Modifier = Modifier) {
     val iconMinus: ImageVector = Icons.Default.Delete
     val iconPlus: ImageVector = Icons.Default.Add
     var totalPrice by remember { mutableFloatStateOf(0f) }
     var nombre by remember { mutableIntStateOf(0) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-    val filePath = File(DishDetailActivity.cartDirectory, "cart.json").absolutePath
+    val filePath = File(HomeActivity.cartDirectory, "cart.json").absolutePath
+    var count by remember { mutableIntStateOf(counter)}
 
     val counterCallback = object : CounterCallback {
         override fun onCounterValueChanged(value: Int) {
@@ -171,7 +173,9 @@ fun DisplayDish(dish:Dish,context:Context, navigateToActivity2: (Class<*>) -> Un
         ) {
             CustomActionBar(
                 onLeftButtonClick = { onBackPressed() },
-                onRightButtonClick = { navigateToActivity2(CartActivity::class.java) }
+                onRightButtonClick = { navigateToActivity2(CartActivity::class.java) },
+                true,
+                count
             )
             ImageCarousel(dish.images, context)
             Spacer(modifier.height(20.dp))
@@ -214,12 +218,16 @@ fun DisplayDish(dish:Dish,context:Context, navigateToActivity2: (Class<*>) -> Un
                 Button(
                     onClick = {
                         //navigateToActivity(CartActivity::class.java)
-                        onAddToCartClicked(dish.id.toInt(),dish.nameFr, nombre, totalPrice, filePath)
-                        //clearJsonFile(filePath)
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Plat ajouté au panier")
-                            logJsonFileContent(context, filePath)
+                        if(nombre != 0){
+                            onAddToCartClicked(dish.id.toInt(),dish.nameFr, nombre, totalPrice, filePath)
+                            count = loadCartItems(filePath).size
+                            //clearJsonFile(filePath)
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Plat ajouté au panier")
+                                logJsonFileContent(context, filePath)
+                            }
                         }
+
                     },
                     modifier = Modifier
                         .width(200.dp)
@@ -271,17 +279,29 @@ fun ImageCarousel(imageUrls: List<String>,context:Context) {
                 }
             }
     ) {
-        items(validImageUrls.size) { index ->
-            val url = validImageUrls[index]
-            val offset = with(LocalDensity.current) { scrollPosition.toDp() }
-            Image(
-                painter = rememberAsyncImagePainter(url),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(screenWidth, 250.dp)
-                    .offset(x = offset),
-                contentScale = ContentScale.Crop
-            )
+        if(validImageUrls.isNotEmpty()){
+            items(validImageUrls.size) { index ->
+                val url = validImageUrls[index]
+                val offset = with(LocalDensity.current) { scrollPosition.toDp() }
+                Image(
+                    painter = rememberAsyncImagePainter(url),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(screenWidth, 250.dp)
+                        .offset(x = offset),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        } else {
+            item{
+                Image(
+                    painter = rememberAsyncImagePainter(R.drawable.image_not_found),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(screenWidth, 250.dp),
+                    contentScale = ContentScale.Crop
+                )
+            }
         }
     }
 }
@@ -353,6 +373,8 @@ fun TwoRoundButtonsWithCounter(
         }
     }
 }
+
+
 
 interface CounterCallback {
     fun onCounterValueChanged(value: Int)

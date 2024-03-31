@@ -58,6 +58,12 @@ class DishActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         category = intent.getStringExtra("DISH_TYPE") ?: "Pas de type provisionné"
+
+    }
+    override fun onResume() {
+        super.onResume()
+        val filePath = File(HomeActivity.cartDirectory, "cart.json").absolutePath
+        var count = loadCartItems(filePath).size
         setContent {
             AndroidERestaurantTheme {
                 // A surface container using the 'background' color from the theme
@@ -71,7 +77,7 @@ class DishActivity : ComponentActivity() {
                             dishResponseState.value=dishResponse
                         })
                     DisplayDishes(this,this::navigateToActivity,this::navigateToActivity2,
-                        { onBackPressedDispatcher.onBackPressed() }, dishResponseState, category)
+                        { onBackPressedDispatcher.onBackPressed() }, dishResponseState, category, count)
                 }
             }
         }
@@ -116,12 +122,14 @@ class DishActivity : ComponentActivity() {
 }
 
 @Composable
-fun DisplayDishes(context: Context, navigateToActivity: (Class<*>,Dish) -> Unit,navigateToActivity2: (Class<*>) -> Unit,onBackPressed:() -> Unit, dishResponse: State<DishResponse?>, categ:String,modifier:Modifier=Modifier) {
+fun DisplayDishes(context: Context, navigateToActivity: (Class<*>,Dish) -> Unit,navigateToActivity2: (Class<*>) -> Unit,onBackPressed:() -> Unit, dishResponse: State<DishResponse?>, categ:String, count:Int, modifier:Modifier=Modifier) {
     val category = dishResponse.value?.data?.find { it.nameFr == categ }
     Column {
         CustomActionBar(
             onLeftButtonClick = { onBackPressed() },
-            onRightButtonClick = { navigateToActivity2(CartActivity::class.java) }
+            onRightButtonClick = { navigateToActivity2(CartActivity::class.java) },
+            true,
+            count
         )
         Text(
             text = categ,

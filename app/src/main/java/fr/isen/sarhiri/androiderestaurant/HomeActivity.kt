@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -48,17 +49,33 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import fr.isen.sarhiri.androiderestaurant.ui.theme.Orange
 import fr.isen.sarhiri.androiderestaurant.ui.theme.Grey
+import java.io.File
+import java.io.IOException
 
 class HomeActivity : ComponentActivity() {
+    companion object {
+        lateinit var cartDirectory: File
+            private set
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        cartDirectory= File(getExternalFilesDir(null), "cartDirectory")
+        cartDirectory.mkdirs()
+
+    }
+    override fun onResume(){
+        super.onResume()
+        val filePath = File(HomeActivity.cartDirectory, "cart.json").absolutePath
+        var count=loadCartItems(filePath).size
         setContent {
             AndroidERestaurantTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    Greeting(Message("Bienvenue\nchez","DroidRestaurant"),this::showToast, this::navigateToActivity, this::navigateToActivity2)
+                    DisplayHome(Message("Welcome\nto","The Pepe's Restaurant"),this::showToast, this::navigateToActivity, this::navigateToActivity2,count)
                 }
             }
         }
@@ -82,18 +99,31 @@ class HomeActivity : ComponentActivity() {
         super.onDestroy()
         Log.d("HomeActivity", "L'activité HomeActivity est en train d'être détruite.")
     }
+    private fun loadCartItems(filePath: String): List<CartItem> {
+        return try {
+            val gson = Gson()
+            val jsonString = File(filePath).readText()
+            gson.fromJson(jsonString, object : TypeToken<List<CartItem>>() {}.type)
+        } catch (e: IOException) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
 }
 
 data class Message (val greet: String, val name: String)
 @Composable
-fun Greeting(msg: Message, showToast: (String)->Unit, navigateToActivity: (Class<*>,String) -> Unit, navigateToActivity2:(Class<*>) -> Unit, modifier: Modifier = Modifier) {
+fun DisplayHome(msg: Message, showToast: (String)->Unit, navigateToActivity: (Class<*>,String) -> Unit, navigateToActivity2:(Class<*>) -> Unit, count: Int,modifier: Modifier = Modifier) {
+
     Column(
     ) {
         HomeCustomActionBar(
-            onRightButtonClick = { navigateToActivity2(CartActivity::class.java) }
+            onRightButtonClick = { navigateToActivity2(CartActivity::class.java) },
+            count
         )
         Row(
-            modifier=modifier.fillMaxWidth(),
+            modifier=modifier.fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, top = 25.dp),
             horizontalArrangement = Arrangement.Center
         ){
             Column(
@@ -195,6 +225,7 @@ fun ClickableButton(text: String, onClick: () -> Unit) {
 @Composable
 fun HomeCustomActionBar(
     onRightButtonClick: () -> Unit,
+    count : Int,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier,
 ) {
     val iconCart: ImageVector = Icons.Default.ShoppingCart
@@ -218,14 +249,27 @@ fun HomeCustomActionBar(
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(1f)
         )
-        IconButton(
-            onClick = { onRightButtonClick() }
-        ) {
-            Icon(imageVector = iconCart,
-                contentDescription = "Cart",
-                tint = Color.White
-            )
+        Box(modifier = modifier){
+            if(count>0){
+                Text(
+                    text = count.toString(),
+                    modifier
+                        .background(Color.Red, CircleShape)
+                        .width(20.dp),
+                    fontSize = 10.sp,
+                    color = Color.White,
+                )
+            }
+            IconButton(
+                onClick = { onRightButtonClick() }
+            ) {
+                Icon(imageVector = iconCart,
+                    contentDescription = "Cart",
+                    tint = Color.White
+                )
+            }
         }
+
     }
 }
 
